@@ -1,4 +1,4 @@
-# Electrol = Electron + Control
+# Ectrol = Electron + Control
 
 一个基于 Electron WebContents 的轻量级自动化助手，用于在你的应用内对网页内容进行交互（点击、输入、聚焦、键盘事件等）。
 
@@ -12,21 +12,21 @@
 
 ```powershell
 # PNPM
-pnpm add electrol
+pnpm add ectrol
 
 # NPM
-npm install electrol
+npm install ectrol
 
 # Yarn
-yarn add electrol
+yarn add ectrol
 ```
 
 ## 快速开始
 
-在主进程中创建 `Electrol` 实例，并传入目标 `WebContents`：
+在主进程中创建 `Ectrol` 实例，并传入目标 `WebContents`：
 
 ```ts
-import Electrol from 'electrol'
+import Ectrol from 'ectrol'
 import { app, BrowserWindow } from 'electron'
 
 let win: BrowserWindow
@@ -41,7 +41,7 @@ app.whenReady().then(async () => {
 
   await win.loadURL('https://example.com')
 
-  const ctl = new Electrol(win.webContents)
+  const ctl = new Ectrol(win.webContents)
 
   // 基本查询与点击
   const exist = await ctl.$('button.submit').exist(2000)

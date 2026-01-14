@@ -8,7 +8,7 @@ export * from './localStorage'
 export * from './sessionStorage'
 
 /**
- * Electrol
+ * Ectrol
  *
  * 一个针对 Electron WebContents 的轻量级自动化助手。
  * - 提供 `localStorage` / `sessionStorage` 封装
@@ -17,7 +17,7 @@ export * from './sessionStorage'
  * 选择器支持穿越 iframe：
  * 使用 `|>` 分隔层级，如：`iframe#login |> input[name="username"]`
  */
-export class Electrol {
+export class Ectrol {
   readonly localStorage: LocalStorage
   readonly sessionStorage: SessionStorage
 
@@ -36,4 +36,4 @@ export class Electrol {
   }
 }
 
-export default Electrol
+export default Ectrol

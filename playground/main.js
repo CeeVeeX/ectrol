@@ -1,4 +1,4 @@
-import { Electrol } from 'electrol'
+import { Ectrol } from 'ectrol'
 import { app, BrowserWindow } from 'electron/main'
 
 async function createWindow() {
@@ -14,23 +14,23 @@ async function createWindow() {
 
   win.webContents.openDevTools()
 
-  const electrol = new Electrol(win.webContents)
+  const ectrol = new Ectrol(win.webContents)
 
   win.webContents.on('did-finish-load', async () => {
-    await electrol.localStorage.setItem('greeting', 'Hello, localStorage!')
-    await electrol.sessionStorage.setItem('greeting', 'Hello, sessionStorage!')
+    await ectrol.localStorage.setItem('greeting', 'Hello, localStorage!')
+    await ectrol.sessionStorage.setItem('greeting', 'Hello, sessionStorage!')
 
-    console.warn(await electrol.localStorage.getItem('greeting'))
-    console.warn(await electrol.sessionStorage.getItem('greeting'))
+    console.warn(await ectrol.localStorage.getItem('greeting'))
+    console.warn(await ectrol.sessionStorage.getItem('greeting'))
 
-    console.log(await electrol.$('#info').getBoundingClientRect())
+    console.log(await ectrol.$('#info').getBoundingClientRect())
 
-    const btn1 = electrol.$('#btn')
-    const btn2 = electrol.$('#btn2')
-    const inputBox = electrol.$('#inputBox')
-    const textArea = electrol.$('#textArea')
-    const checkbox1 = electrol.$('#checkbox1')
-    const radio2 = electrol.$('#radio2')
+    const btn1 = ectrol.$('#btn')
+    const btn2 = ectrol.$('#btn2')
+    const inputBox = ectrol.$('#inputBox')
+    const textArea = ectrol.$('#textArea')
+    const checkbox1 = ectrol.$('#checkbox1')
+    const radio2 = ectrol.$('#radio2')
 
     await new Promise(resolve => setTimeout(resolve, 5000))
 
@@ -48,12 +48,12 @@ async function createWindow() {
 
     /** ------------------------------------------------------------------------------------------------- */
 
-    const iframe_btn1 = electrol.$('iframe|>button#btn')
-    const iframe_btn2 = electrol.$('iframe|>button#btn2')
-    const iframe_inputBox = electrol.$('iframe|>input#inputBox')
-    const iframe_textArea = electrol.$('iframe|>textarea#textArea')
-    const iframe_checkbox1 = electrol.$('iframe|>input#checkbox1')
-    const iframe_radio2 = electrol.$('iframe|>input#radio2')
+    const iframe_btn1 = ectrol.$('iframe|>button#btn')
+    const iframe_btn2 = ectrol.$('iframe|>button#btn2')
+    const iframe_inputBox = ectrol.$('iframe|>input#inputBox')
+    const iframe_textArea = ectrol.$('iframe|>textarea#textArea')
+    const iframe_checkbox1 = ectrol.$('iframe|>input#checkbox1')
+    const iframe_radio2 = ectrol.$('iframe|>input#radio2')
 
     await new Promise(resolve => setTimeout(resolve, 3000))
     await iframe_btn1.click()

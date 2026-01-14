@@ -1,5 +1,5 @@
 {
-  "name": "electrol",
+  "name": "ectrol",
   "type": "module",
   "version": "0.0.1",
   "packageManager": "pnpm@10.25.0",
@@ -7,12 +7,12 @@
   "author": "Cee Vee X <ceeveex@hotmail.com>",
   "license": "MIT",
   "funding": "https://github.com/sponsors/ceeveex",
-  "homepage": "https://github.com/ceeveex/electrol#readme",
+  "homepage": "https://github.com/ceeveex/ectrol#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ceeveex/electrol.git"
+    "url": "git+https://github.com/ceeveex/ectrol.git"
   },
-  "bugs": "https://github.com/ceeveex/electrol/issues",
+  "bugs": "https://github.com/ceeveex/ectrol/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {

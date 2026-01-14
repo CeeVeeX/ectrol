@@ -125,7 +125,7 @@ importers:
 
   playground:
     devDependencies:
-      electrol:
+      ectrol:
         specifier: workspace:*
         version: link:..
       electron:
