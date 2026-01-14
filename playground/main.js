@@ -27,12 +27,46 @@ async function createWindow() {
 
     const btn1 = electrol.$('#btn')
     const btn2 = electrol.$('#btn2')
+    const inputBox = electrol.$('#inputBox')
+    const textArea = electrol.$('#textArea')
+    const checkbox1 = electrol.$('#checkbox1')
+    const radio2 = electrol.$('#radio2')
+
+    await new Promise(resolve => setTimeout(resolve, 5000))
 
     await btn1.click()
     await btn2.click()
 
+    await new Promise(resolve => setTimeout(resolve, 3000))
     await btn1.hover()
     await btn2.hover()
+
+    await inputBox.fill('Hello, World!')
+    await textArea.fill('This is a text area.\n多行文本测试。')
+    await checkbox1.check()
+    await radio2.check()
+
+    /** ------------------------------------------------------------------------------------------------- */
+
+    const iframe_btn1 = electrol.$('iframe|>button#btn')
+    const iframe_btn2 = electrol.$('iframe|>button#btn2')
+    const iframe_inputBox = electrol.$('iframe|>input#inputBox')
+    const iframe_textArea = electrol.$('iframe|>textarea#textArea')
+    const iframe_checkbox1 = electrol.$('iframe|>input#checkbox1')
+    const iframe_radio2 = electrol.$('iframe|>input#radio2')
+
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    await iframe_btn1.click()
+    await iframe_btn2.click()
+
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    await iframe_btn1.hover()
+    await iframe_btn2.hover()
+
+    await iframe_inputBox.fill('Hello, World!')
+    await iframe_textArea.fill('This is a text area.\n多行文本测试。')
+    await iframe_checkbox1.check()
+    await iframe_radio2.check()
   })
 }
 
