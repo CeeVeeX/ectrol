@@ -382,6 +382,223 @@ export class ElementHandle {
       })()
     `)
   }
+
+  /**
+   * 选择下拉框选项。
+   * @param value 选项的值
+   * @returns
+   */
+  async selectOption(value: string) {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        // 验证元素是否为选择框
+        if (target.element.tagName !== 'SELECT') return null;
+
+        target.element.value = ${JSON.stringify(value)};
+        target.element.dispatchEvent(new Event('change', { bubbles: true }));
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的 HTML 内容。
+   */
+  async innerHTML() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.innerHTML;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的文本内容。
+   */
+  async innerText() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.innerText;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的文本内容。
+   * @returns 元素的文本内容
+   */
+  async textContent() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.textContent;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的输入值。
+   * @returns 元素的输入值
+   */
+  async inputValue() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        // 验证输入框是否是文本类型
+        if (target.element.tagName !== 'INPUT' && target.element.tagName !== 'TEXTAREA' && !target.element.isContentEditable) return null;
+
+        return target.element.value;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的选中状态。
+   * @returns 元素的选中状态
+   */
+  async isChecked() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        // 验证输入框是否是复选框或单选框
+        if (target.element.tagName !== 'INPUT' || target.element.type !== 'checkbox' && target.element.type !== 'radio') return null;
+
+        return target.element.checked;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的禁用状态。
+   * @returns 元素的禁用状态
+   */
+  async isDisabled() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.disabled;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的可见状态。
+   * @returns 元素的可见状态
+   */
+  async isVisible() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.offsetParent !== null;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的可用状态。
+   * @returns 元素的可用状态
+   */
+  async isEnabled() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return !target.element.disabled;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的可编辑状态。
+   * @returns 元素的可编辑状态
+   */
+  async isEditable() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.isContentEditable;
+      })()
+    `)
+  }
+
+  /**
+   * 获取元素的隐藏状态。
+   * @returns 元素的隐藏状态
+   */
+  async isHidden() {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement()};
+        if (!target) return null;
+
+        return target.element.offsetParent === null;
+      })()
+    `)
+  }
+
+  /**
+   * 选中元素的文本内容。
+   */
+  async selectText(options: {
+    timeout?: number
+  }) {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement(options.timeout)};
+        if (!target) return null;
+
+        // 选中元素的文本内容
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(target.element);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      })()
+    `)
+  }
+
+  /**
+   * 取消选中复选框或单选框。
+   * @param options 选项
+   * @returns
+   */
+  async uncheck(options?: {
+    timeout?: number
+  }) {
+    return this.contents.executeJavaScript(/* js */`
+      (function() {
+        const target = ${this._getElement(options?.timeout)};
+        if (!target) return null;
+
+        // 验证输入框是否是复选框或单选框
+        if (target.element.tagName !== 'INPUT' || target.element.type !== 'checkbox' && target.element.type !== 'radio') return null;
+
+        target.element.checked = false;
+        target.element.dispatchEvent(new Event('change', { bubbles: true }));
+      })()
+    `)
+  }
 }
 
 export default ElementHandle
