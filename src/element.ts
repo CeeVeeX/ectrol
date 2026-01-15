@@ -41,8 +41,6 @@ export interface ISize {
  * - 大多数 API 接受 `timeout`，轮询查找元素直到超时
  */
 export class ElementHandle {
-  isNotFound = false
-
   constructor(
     public readonly contents: WebContents,
     public readonly selector: string,
@@ -56,95 +54,107 @@ export class ElementHandle {
    */
   private _getElement(timeout: number = 0): string {
     return /* js */`
-     (()=>{
-        function getElement() {
-          const selector = "${this.selector}";
+        new Promise((resolve) => {
+          function getElement() {
+            const selector = "${this.selector}";
+            if (!selector) return null;
 
-          if (!selector) return null;
-
-          window.__ELECTROL__ = window.__ELECTROL__ || {};
-          if (window.__ELECTROL__[selector]) {
-            return window.__ELECTROL__[selector];
-          }
-
-          // 分层选择器，支持 iframe 穿越
-          const parts = selector.split('|>').map(s => s.trim());
-          if (!parts.length) return null;
-
-          let currentDocument = document;
-          let offsetLeft = 0;
-          let offsetTop = 0;
-          let element = null;
-
-          for (let i = 0; i < parts.length; i++) {
-            if (!currentDocument) return null;
-
-            const part = parts[i];
-            // 在当前文档查找该层选择器
-            const el = currentDocument.querySelector(part);
-
-            if (!el) {
-              console.warn('未找到元素:', part);
-              return null;
+            window.__ELECTROL__ = window.__ELECTROL__ || {};
+            if (window.__ELECTROL__[selector]) {
+              return window.__ELECTROL__[selector];
             }
 
-            const rect = el.getBoundingClientRect();
+            // 分层选择器，支持 iframe 穿越
+            const parts = selector.split('|>').map(s => s.trim());
+            if (!parts.length) return null;
 
-            // 累加当前层级偏移
-            offsetLeft += rect.left;
-            offsetTop += rect.top;
+            let currentDocument = document;
+            let offsetLeft = 0;
+            let offsetTop = 0;
+            let element = null;
 
-            element = el;
+            for (let i = 0; i < parts.length; i++) {
+              if (!currentDocument) return null;
 
-            const isLast = i === parts.length - 1;
-            if (!isLast) {
-              if (el.tagName !== 'IFRAME') {
-                console.warn('非 iframe 元素却尝试进入下一层:', part);
+              const part = parts[i];
+              // 在当前文档查找该层选择器
+              const el = currentDocument.querySelector(part);
+
+              if (!el) {
+                console.warn('未找到元素:', part);
                 return null;
               }
 
-              const nextDoc = el.contentDocument || el.contentWindow?.document;
-              if (!nextDoc) {
-                console.warn('无法访问 iframe.contentDocument（可能跨域）');
-                return null;
-              }
+              const rect = el.getBoundingClientRect();
 
-              currentDocument = nextDoc;
+              // 累加当前层级偏移
+              offsetLeft += rect.left;
+              offsetTop += rect.top;
+
+              element = el;
+
+              const isLast = i === parts.length - 1;
+              if (!isLast) {
+                if (el.tagName !== 'IFRAME') {
+                  console.warn('非 iframe 元素却尝试进入下一层:', part);
+                  return null;
+                }
+
+                const nextDoc = el.contentDocument || el.contentWindow?.document;
+                if (!nextDoc) {
+                  console.warn('无法访问 iframe.contentDocument（可能跨域）');
+                  return null;
+                }
+
+                currentDocument = nextDoc;
+              }
             }
+
+            if (!element) return null;
+
+            const finalRect = element.getBoundingClientRect();
+
+            // 缓存元素
+            // 缓存以避免重复查找
+            window.__ELECTROL__[selector] = {
+              element,
+              rect: new DOMRect(
+                offsetLeft,
+                offsetTop,
+                finalRect.width,
+                finalRect.height
+              )
+            };
+
+            return window.__ELECTROL__[selector]
           }
 
-          if (!element) return null;
+          const timeout = ${timeout}
 
-          const finalRect = element.getBoundingClientRect();
+          // 轮询查找元素
+          const interval = setInterval(() => {
+            const element = getElement();
+            if (element) {
+              clearInterval(interval);
+              clearTimeout(timeoutId);
+              resolve(element);
+            }
+          }, 100);
 
-          // 缓存元素
-          // 缓存以避免重复查找
-          window.__ELECTROL__[selector] = {
-            element,
-            rect: new DOMRect(
-              offsetLeft,
-              offsetTop,
-              finalRect.width,
-              finalRect.height
-            )
-          };
+          // 超时处理
+          const timeoutId = setTimeout(() => {
+            clearInterval(interval);
+            resolve(null);
+          }, timeout);
 
-          return window.__ELECTROL__[selector]
-        }
-
-        const timeout = ${timeout}
-
-        if(timeout <= 0) {
-          return getElement();
-        }
-
-        const startTime = Date.now()
-        while (Date.now() - startTime < timeout) {
           const element = getElement();
-          if (element) return element;
-        }
-        return null;
-      })()
+
+          if (element) {
+            clearInterval(interval);
+            clearTimeout(timeoutId);
+            resolve(element);
+          }
+        })
     `
   }
 
@@ -153,8 +163,8 @@ export class ElementHandle {
    */
   hover(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         const event = new MouseEvent('mouseover', {
@@ -257,8 +267,8 @@ export class ElementHandle {
    */
   check(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         // 验证输入框是否是复选框或单选按钮
@@ -297,9 +307,9 @@ export class ElementHandle {
 
     // 如果不追加内容，则清空输入框
     if (!options?.append) {
-      await this.contents.executeJavaScript(`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      await this.contents.executeJavaScript(/* js */`
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (target && target.element) {
           if (target.element.tagName !== 'INPUT' && target.element.tagName !== 'TEXTAREA' && !target.element.isContentEditable) return null;
           target.element.value = "";
@@ -358,8 +368,8 @@ export class ElementHandle {
     timeout?: number
   }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         // 验证输入框是否是文本类型
@@ -382,13 +392,9 @@ export class ElementHandle {
    * - 返回扩展的 DOMRect 信息并包含元素中心点坐标。
    */
   getBoundingClientRect(timeout: number = 0): Promise<IBoundingClientRect | null> {
-    if (this.isNotFound)
-      return Promise.resolve(null)
-
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(timeout)};
-
+      (async () => {
+        const target = await ${this._getElement(timeout)};
         if (!target) return null;
 
         const rect = target.rect;
@@ -415,8 +421,8 @@ export class ElementHandle {
    */
   async selectOption(value: string, options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         // 验证元素是否为选择框
@@ -433,8 +439,8 @@ export class ElementHandle {
    */
   async innerHTML(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.innerHTML;
@@ -447,8 +453,8 @@ export class ElementHandle {
    */
   async innerText(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.innerText;
@@ -462,8 +468,8 @@ export class ElementHandle {
    */
   async textContent(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.textContent;
@@ -477,8 +483,8 @@ export class ElementHandle {
    */
   async inputValue(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         // 验证输入框是否是文本类型
@@ -495,8 +501,8 @@ export class ElementHandle {
    */
   async isChecked(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         // 验证输入框是否是复选框或单选框
@@ -513,8 +519,8 @@ export class ElementHandle {
    */
   async isDisabled(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.disabled;
@@ -528,8 +534,8 @@ export class ElementHandle {
    */
   async isVisible(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.offsetParent !== null;
@@ -543,8 +549,8 @@ export class ElementHandle {
    */
   async isEnabled(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return !target.element.disabled;
@@ -558,8 +564,8 @@ export class ElementHandle {
    */
   async isEditable(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.isContentEditable;
@@ -573,8 +579,8 @@ export class ElementHandle {
    */
   async isHidden(options?: { timeout?: number }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         return target.element.offsetParent === null;
@@ -589,8 +595,8 @@ export class ElementHandle {
     timeout?: number
   }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options.timeout)};
         if (!target) return null;
 
         // 选中元素的文本内容
@@ -612,8 +618,8 @@ export class ElementHandle {
     timeout?: number
   }) {
     return this.contents.executeJavaScript(/* js */`
-      (function() {
-        const target = ${this._getElement(options?.timeout)};
+      (async () => {
+        const target = await ${this._getElement(options?.timeout)};
         if (!target) return null;
 
         // 验证输入框是否是复选框或单选框
