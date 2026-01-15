@@ -24,4 +24,6 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm i -g @antfu/ni
       - run: nci
+      # Debug step，跑一次后可以移除
+      - run: env | grep TOKEN || true
       - run: pnpm -r publish --access public --no-git-checks
