@@ -384,7 +384,12 @@ export class ElementHandle {
    * 检查元素是否存在（支持超时轮询）。
    */
   async exist(timeout?: number): Promise<boolean> {
-    return await this.contents.executeJavaScript(/* js */`!!${this._getElement(timeout)}`)
+    return await this.contents.executeJavaScript(/* js */`
+      (async () => {
+        const target = await ${this._getElement(timeout)};
+        return !!target;
+      })()
+    `)
   }
 
   /**
