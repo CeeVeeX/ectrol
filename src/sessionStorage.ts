@@ -13,21 +13,21 @@ export class SessionStorage {
    * 获取指定键的值。
    */
   async getItem(key: string): Promise<string | null> {
-    return this.contents.executeJavaScript(`sessionStorage.getItem("${key}")`)
+    return this.contents.executeJavaScript(/* js */`sessionStorage.getItem("${key}")`)
   }
 
   /**
    * 写入指定键的值。
    */
   async setItem(key: string, value: string): Promise<void> {
-    await this.contents.executeJavaScript(`sessionStorage.setItem("${key}", "${value}")`)
+    await this.contents.executeJavaScript(/* js */`sessionStorage.setItem("${key}", "${value}")`)
   }
 
   /**
    * 删除指定键。
    */
   async removeItem(key: string): Promise<void> {
-    await this.contents.executeJavaScript(`sessionStorage.removeItem("${key}")`)
+    await this.contents.executeJavaScript(/* js */`sessionStorage.removeItem("${key}")`)
   }
 }
 

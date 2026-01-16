@@ -13,21 +13,21 @@ export class LocalStorage {
    * 获取指定键的值。
    */
   async getItem(key: string): Promise<string | null> {
-    return this.contents.executeJavaScript(`localStorage.getItem("${key}")`)
+    return this.contents.executeJavaScript(/* js */`localStorage.getItem("${key}")`)
   }
 
   /**
    * 写入指定键的值。
    */
   async setItem(key: string, value: string): Promise<void> {
-    await this.contents.executeJavaScript(`localStorage.setItem("${key}", "${value}")`)
+    await this.contents.executeJavaScript(/* js */`localStorage.setItem("${key}", "${value}")`)
   }
 
   /**
    * 删除指定键。
    */
   async removeItem(key: string): Promise<void> {
-    await this.contents.executeJavaScript(`localStorage.removeItem("${key}")`)
+    await this.contents.executeJavaScript(/* js */`localStorage.removeItem("${key}")`)
   }
 }
 
